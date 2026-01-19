@@ -1,8 +1,8 @@
 # FPGA Radar Pulse Compression System
 
-**FPGA-based radar pulse compression system implemented in Verilog**
+**FPGA-based radar pulse compression system implemented on ZYNQ 7020**
 
-This is a self-selected project for a university Digital Electronics Laboratory course, demonstrating the implementation of radar signal processing algorithms on FPGA hardware.
+> ⚠️ **NOTE**: This is a self-selected project for a university Digital Electronics Laboratory course. It demonstrates the complete implementation of radar signal processing algorithms on FPGA hardware.
 
 ## Project Overview
 
@@ -132,6 +132,8 @@ The system supports 7 different waveform outputs (selectable via button):
 ### Data Acquisition
 
 - **UART Mode**: Connect UART to PC (115200 baud, 8N1) to receive real-time magnitude data
+  - Run `pip install -r requirements.txt` to install Python dependencies
+  - Execute `python user/radar_scope.py` to launch the radar monitoring GUI
 - **DAC Mode**: Use DAC waveform selector to output different processing stages as analog signals
 - **ILA Mode**: Use Vivado Integrated Logic Analyzer to observe internal signals
 
@@ -172,3 +174,4 @@ This is an educational project for a university course. Feel free to use for lea
 ## Acknowledgments
 
 This project was developed as a self-selected topic for a Digital Electronics Laboratory course at the university.
+# fpga-radar-pulse-compression

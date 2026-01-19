@@ -1,0 +1,7 @@
+# Python dependencies for radar_scope.py
+# Install with: pip install -r requirements.txt
+
+pyserial>=3.5
+numpy>=1.19.0
+PyQt5>=5.15.0
+pyqtgraph>=0.11.0

@@ -1,52 +1,108 @@
-# Vivado / Xilinx
-.Xil/
-*.jou
-*.log
-*.str
-*.pb
-*.jou
-*.run*
-*.cache
-*.hw
-*.ip_user_files
-*.gen
-*.sim
-*.runs
-*.datasources
-*.srcs
-*.xpr
-*.wcfg
-*.wdb
-*.dcp
-*.bit
-*.bin
-*.mcs
-*.prm
-*.xci
-*.xcix
-
-# Java/Vivado crash logs
-hs_err_pid*.log
-hs_err_pid*.dmp
-
-# Editor / IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# ========== GENERAL ==========
 *~
-
-# OS
+\#*
+.\#*
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
-# Build outputs
-*.netlist
-*.net
-*.ngc
-*.ngr
-*.ngd
+# ========== VIVADO GENERATED FILES ==========
+*.jou              # Journal files
+*.log              # Log files
+*.debug
+*.str
+*.zip
+*.tmp
+*.rst
+*.dcp              # Design checkpoints
+*.hwdef
+*.vds
+*.veo
+*.vho              # Verilog templates
+*.wdf
+*.vdi
+*.dmp
+*.mif              # Memory initialization files (binary)
+*_stub.v
+*_stub.vhdl
+.project
 
-# Project files (user should recreate)
+# ========== DIRECTORIES ==========
+*.cache/
+.metadata/
+*.data/
+.Xil/
+*.hw/
+.ip_user_files/
+*.gen/
+*.sim/
+*.datasources/
+*.srcs/
+
+# ========== RUN DIRECTORIES (keep utilization reports) ==========
+*.runs/synth*/*.xml
+*.runs/synth*/*.txt
+*.runs/synth*/*.sh
+*.runs/synth*/*.tcl
+*.runs/impl*/*.xml
+*.runs/impl*/*.html
+*.runs/impl*/*.txt
+*.runs/impl*/*.tcl
+
+# ========== IP GENERATED PRODUCTS (keep .xci and .coe only) ==========
+user/ip/**/synth/
+user/ip/**/sim/
+user/ip/**/simulation/
+user/ip/**/misc/
+user/ip/**/doc/
+user/ip/**/cmodel/
+user/ip/**/demo_tb/
+user/ip/**/hdl/
+user/ip/**/*.veo
+user/ip/**/*.vho
+user/ip/**/*.log
+user/ip/**/*.xml
+user/ip/**/*.bmj
+user/ip/**/*_sim_netlist.*
+user/ip/**/*_stub.*
+user/ip/**/*.dcp
+user/ip/**/*.mif
+user/ip/**/*.tcl
+user/ip/**/.xilinx/
+user/ip/**/*_ooc.xdc
+
+# ========== SIMULATION ARTIFACTS ==========
+*.txt              # Simulation output files
+xsim.dir/
+*.wcfg
+*.wdb
+
+# ========== VIVADO PROJECT (generated from TCL) ==========
+*.xpr
+*.runs/
+*.hw/
 prj/
 ZYNQ7020_Pin_Assignment.*
+
+# ========== PYTHON ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
