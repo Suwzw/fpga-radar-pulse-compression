@@ -1,0 +1,58 @@
+`timescale 1ns / 1ps
+// =============================================================================
+// Module: system_top (自动复位终极版)
+// Description:
+//   1. 接收来自板卡的50MHz物理时钟。
+//   2. 调用你配置的、不带复位端口的Clocking Wizard IP核。
+//   3. 使用时钟IP核的locked信号，生成一个可靠的内部复位信号。
+//   4. 用生成的100MHz时钟和内部复位信号，来驱动我们核心的radar_top模块。
+// =============================================================================
+module system_top(
+    // --- 这是连接到FPGA物理引脚的端口 ---
+    input wire clk_pin_in, // 来自板卡的50MHz时钟
+    output wire uart_tx_pin_out, // 新增顶层UART输出
+    
+    // --- START: 新增DAC物理引脚输出 ---
+    output wire        dac_clk_pin,        // 连接到ADDA106的DAC_CLK
+    output wire        dac_pd_pin,         // 连接到ADDA106的DAC_PD (使能)
+    output wire [7:0]  dac_data_pins       // 连接到ADDA106的DAC_D[7:0]
+    // --- END: 新增DAC物理引脚输出 ---
+    );
+
+    // --- 内部信号线 ---
+    wire clk_100mhz; // 由IP核生成的100MHz时钟
+    wire locked;     // 时钟IP核锁定信号
+    wire internal_rst; // 我们生成的内部复位信号
+
+    // 1. 实例化时钟IP核
+    //    这里的模块名 `clk_wiz_0` 必须与你生成的IP核名字一致
+    //    端口连接与你的源文件完全匹配
+    clk_wiz_0 clk_wiz_inst
+    (
+        // Clock out ports
+        .clk_100mhz(clk_100mhz),
+        // Status and control signals
+        .locked(locked),
+        // Clock in ports
+        .clk_in1(clk_pin_in)
+    );
+    
+    // 2. 生成我们自己的高电平有效复位信号
+    //    当locked为0时(时钟不稳定)，rst为1(复位)
+    //    当locked为1时(时钟稳定)，rst为0(正常工作)
+    assign internal_rst = ~locked;
+
+    // 3. 实例化我们的雷达处理核心
+    radar_top radar_inst (
+        .clk(clk_100mhz),
+        .rst(internal_rst), // 使用我们生成的内部复位信号
+        .uart_tx_pin(uart_tx_pin_out), // 连接端口
+        
+        // --- START: 连接DAC端口 ---
+        .dac_clk(dac_clk_pin),
+        .dac_pd(dac_pd_pin),
+        .dac_data(dac_data_pins)
+        // --- END: 连接DAC端口 ---
+    );
+
+endmodule

@@ -1,0 +1,47 @@
+`timescale 1ns / 1ps
+
+//////////////////////////////////////////////////////////////////////////////////
+// Module Name: Integrated (Corrected Pipelined Version)
+// Description: ּDĻģ (Ϊȫˮ߽ṹ)
+//////////////////////////////////////////////////////////////////////////////////
+module Integrated #(
+    parameter D = 3,
+    parameter INPUT_WIDTH = 14,
+    parameter OUTPUT_WIDTH = 20
+)(
+    input                           rst,
+    input                           clk,
+    input      signed [INPUT_WIDTH-1:0]  Xin,
+    output     signed [OUTPUT_WIDTH-1:0] Intout
+);
+
+    // D+1ˮߣÿһ
+    wire signed [OUTPUT_WIDTH-1:0] integrator_stages [0:D];
+    
+    // λչΪ0
+    assign integrator_stages[0] = {{(OUTPUT_WIDTH-INPUT_WIDTH){Xin[INPUT_WIDTH-1]}}, Xin};
+
+    // ʹ generate for ѭDˮ߻
+    genvar i;
+    generate
+        for (i = 0; i < D; i = i + 1) begin : integrator_pipeline_stage
+            reg signed [OUTPUT_WIDTH-1:0] accumulator = 0;
+            
+            always @(posedge clk or posedge rst) begin
+                if (rst) begin
+                    accumulator <= 0;
+                end else begin
+                    // ÿһۼǰһ (һʱڵĽ)
+                    accumulator <= accumulator + integrator_stages[i];
+                end
+            end
+            
+            // ǰۼӽһ
+            assign integrator_stages[i+1] = accumulator;
+        end
+    endgenerate
+
+    // һۼӽ
+    assign Intout = integrator_stages[D];
+    
+endmodule

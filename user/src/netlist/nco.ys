@@ -1,0 +1,4 @@
+read_verilog -sv -formal -overwrite {workspace}/prj/xilinx/Radar_Pulse_Compression.ip_user_files/ip/sine_cos_rom/sine_cos_rom_stub.v
+read_verilog -sv -formal -overwrite {workspace}/Radar_Pulse_Compression.srcs/sources_1/new/nco.v
+design -reset-vlog; proc;
+write_json {workspace}/netlist/nco.json

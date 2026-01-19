@@ -1,0 +1,52 @@
+# Vivado / Xilinx
+.Xil/
+*.jou
+*.log
+*.str
+*.pb
+*.jou
+*.run*
+*.cache
+*.hw
+*.ip_user_files
+*.gen
+*.sim
+*.runs
+*.datasources
+*.srcs
+*.xpr
+*.wcfg
+*.wdb
+*.dcp
+*.bit
+*.bin
+*.mcs
+*.prm
+*.xci
+*.xcix
+
+# Java/Vivado crash logs
+hs_err_pid*.log
+hs_err_pid*.dmp
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.netlist
+*.net
+*.ngc
+*.ngr
+*.ngd
+
+# Project files (user should recreate)
+prj/
+ZYNQ7020_Pin_Assignment.*

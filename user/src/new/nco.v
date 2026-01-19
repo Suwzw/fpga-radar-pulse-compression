@@ -1,0 +1,70 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/08/12 19:48:34
+// Design Name: 
+// Module Name: nco
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module nco #(
+    // --- 参数列表 ---
+    parameter PHASE_WIDTH = 32, // 相位累加器位宽
+    parameter ADDR_BITS   = 10, // ROM地址位宽
+    parameter DATA_WIDTH  = 12  // ROM数据位宽
+)(
+    // --- 端口列表 ---
+    input wire clk,
+    input wire rst,
+    input wire [PHASE_WIDTH-1:0] phase_increment, // 相位增量，决定输出频率
+    output wire signed [DATA_WIDTH-1:0] sine_out,
+    output wire signed [DATA_WIDTH-1:0] cosine_out
+);
+
+    // 内部信号
+    reg [PHASE_WIDTH-1:0] phase_accumulator;
+    wire [ADDR_BITS-1:0]  sine_addr;
+    wire [ADDR_BITS-1:0]  cosine_addr;
+
+    // 1. 相位累加器
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            phase_accumulator <= 0;
+        end else begin
+            phase_accumulator <= phase_accumulator + phase_increment;
+        end
+    end
+
+    // 2. 生成ROM的读地址
+    assign sine_addr   = phase_accumulator[PHASE_WIDTH-1 : PHASE_WIDTH-ADDR_BITS];
+    assign cosine_addr = sine_addr + (1 << (ADDR_BITS - 2)); // 地址加上 1024/4 = 256
+
+    // 3. 实例化双端口ROM IP核
+    //    这里的模块名 `sine_cos_rom` 必须与你在IP核配置中起的名字完全一样
+    sine_cos_rom sine_cos_rom_inst (
+      .clka(clk),          // 端口A的时钟
+      .ena(1'b1),          // 端口A使能 (常高)
+      .addra(sine_addr),   // 端口A的地址，用于读sin值
+      .douta(sine_out),    // 端口A的输出，即sin(x)
+
+      .clkb(clk),          // 端口B的时钟
+      .enb(1'b1),          // 端口B使能 (常高)
+      .addrb(cosine_addr), // 端口B的地址，用于读cos值
+      .doutb(cosine_out)   // 端口B的输出，即cos(x)
+    );
+
+endmodule
+

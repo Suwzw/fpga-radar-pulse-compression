@@ -1,0 +1,140 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Module Name: MultCIC (Corrected Control Signal Version)
+// Description: CIC˲ģ飬ֵģʽµĿźbug
+//////////////////////////////////////////////////////////////////////////////////
+module MultCIC #(
+    parameter MODE = "DEC",      // "DEC"  "INT" ģʽѡģʽ
+    parameter R = 5,             // ȡֵıӰ
+    parameter D = 3,             // ּCIC˲ļ
+    parameter INPUT_WIDTH = 14,  // λ
+    parameter OUTPUT_WIDTH = 22  // λ
+)(
+    input        rst,            // λźţߵƽЧ
+    input        clk,            // ʱź
+    input  [INPUT_WIDTH-1:0] Xin, // 
+    // --- START: ޸ ---
+    input        Xin_valid,      // ΪֵģʽЧź
+    // --- END: ޸ ---
+    output [OUTPUT_WIDTH-1:0] Yout, // 
+    output        rdy            // Чָʾź
+);
+
+
+    // мź
+    wire signed [OUTPUT_WIDTH-1:0] Intout;   // ģ
+    wire signed [OUTPUT_WIDTH-1:0] dout;     // ȡģ
+    wire ND;  // Чź
+
+
+    // ɲͬģʽµģʵ
+    generate
+        // ѡȡģʽ"DEC"ִ´
+        if (MODE == "DEC") begin : DEC_MODE
+
+            // 1. ʵģ
+            Integrated #(
+                .D(D),                // ּ
+                .INPUT_WIDTH(INPUT_WIDTH),  // λ
+                .OUTPUT_WIDTH(OUTPUT_WIDTH) // λ
+            ) U_Int (
+                .rst(rst),            // λź
+                .clk(clk),            // ʱź
+                .Xin(Xin),            // 
+                .Intout(Intout)       // 
+            );
+
+
+
+            // 2. ʵȡģ
+            // ȡģRֵȡıСݵ
+            Decimate #(
+                .R(R),                // ȡ
+                .DATA_WIDTH(OUTPUT_WIDTH)  // ݿ
+            ) U_Dec (
+                .rst(rst),            // λź
+                .clk(clk),            // ʱź
+                .Iin(Intout),         // 
+                .dout(dout),          // ȡ
+                .rdy(ND)              // Чָʾź
+            );
+
+
+
+            // 3. ʵ״˲Combвֲ
+            Comb #(
+                .D(D),                        // ּ
+                .DATA_WIDTH(OUTPUT_WIDTH)     // ݿ
+            ) U_Comb (
+                .rst(rst),                    // λź
+                .clk(clk),                    // ʱź
+                .ND(ND),                      // Чź
+                .Xin(dout),                   // 
+                .Yout(Yout)                   // ״˲
+            );
+
+            // Чź
+            assign rdy = ND;
+
+        end else if (MODE == "INT") begin : INT_MODE
+
+            // 1. ֵģʽµ״˲Comb
+            wire signed [OUTPUT_WIDTH-1:0] comb_out;    // ״˲
+            wire signed [OUTPUT_WIDTH-1:0] interp_out;  // ֵ
+            wire interp_rdy;                           // ֵģЧź
+
+
+            // --- START: ޸ ---
+            // ״˲ֻЧʱʹ
+            Comb #(
+                .D(D),                        // ּ
+                .DATA_WIDTH(OUTPUT_WIDTH)     // ݿ
+            ) U_Comb_int (
+                .rst(rst),                    // λź
+                .clk(clk),                    // ʱź
+                .ND(Xin_valid),               // <<--- ޸ĵ㣺ʹⲿЧź
+                .Xin({{(OUTPUT_WIDTH-INPUT_WIDTH){Xin[INPUT_WIDTH-1]}}, Xin}),  // źŷչ
+                .Yout(comb_out)               // ״˲
+            );
+
+
+            // 2. ʵֵģ飨Interpolate
+            // ݲֵRвR-1
+            Interpolate #(
+                .R(R),                // ֵ
+                .INPUT_WIDTH(OUTPUT_WIDTH),  // λ
+                .OUTPUT_WIDTH(OUTPUT_WIDTH)  // λ
+            ) U_Interp (
+                .rst(rst),            // λź
+                .clk(clk),            // ʱź
+                .Xin(comb_out),       // ݸֵģ
+                .Xin_valid(Xin_valid), // <<--- ޸ĵ㣺ʹⲿЧź
+                .Xout(interp_out),    // ֵ
+                .Xout_valid(interp_rdy) // ֵЧź
+            );
+            // --- END: ޸ ---
+            
+
+            // 3. ֵݽ
+            Integrated #(
+                .D(D),                // ּ
+                .INPUT_WIDTH(OUTPUT_WIDTH),  // λ
+                .OUTPUT_WIDTH(OUTPUT_WIDTH) // λ
+            ) U_Int_int (
+                .rst(rst),            // λź
+                .clk(clk),            // ʱź
+                .Xin(interp_out[OUTPUT_WIDTH-1:0]),  // ֵݣҪضϣ
+                .Intout(Yout)         // 
+            );
+
+            // ֵЧź
+            assign rdy = interp_rdy;
+
+        end else begin : DEFAULT_MODE
+            // ĬģʽMODEȲ"DEC"Ҳ"INT"ʱЧ
+            assign Yout = {OUTPUT_WIDTH{1'b0}}; // ȫ0
+            assign rdy = 1'b0; // Чź
+        end
+    endgenerate
+
+endmodule
