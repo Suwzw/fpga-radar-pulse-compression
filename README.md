@@ -1,177 +1,197 @@
-# FPGA Radar Pulse Compression System
+# 基于FPGA的雷达脉冲压缩系统
 
 **FPGA-based radar pulse compression system implemented on ZYNQ 7020**
 
-> ⚠️ **NOTE**: This is a self-selected project for a university Digital Electronics Laboratory course. It demonstrates the complete implementation of radar signal processing algorithms on FPGA hardware.
+> ⚠️ **说明**: 这是大学数字电路实验课程的自主选题项目，在FPGA硬件上完整实现了雷达信号处理算法。
 
-## Project Overview
+## 项目简介
 
-This project implements a complete radar pulse compression system on a ZYNQ 7020 FPGA using Xilinx Vivado. The system performs real-time processing of radar signals through digital down conversion (DDC), pulse compression (matched filtering), and magnitude extraction using CORDIC algorithms.
+本项目在ZYNQ 7020 FPGA上使用Xilinx Vivado实现了完整的雷达脉冲压缩系统。系统通过数字下变频（DDC）、脉冲压缩（匹配滤波）和CORDIC算法进行幅度提取，实现对雷达信号的实时处理。
 
-## Key Features
+## 主要特性
 
-- **ROM-based IF Signal Generator**: Pre-stored radar intermediate frequency signals
-- **Hardware Noise Generator**: CLT (Central Limit Theorem) based Gaussian white noise generation
-- **Manual DDC Implementation**: Handwritten digital down converter with NCO (Numerically Controlled Oscillator)
-- **Pulse Compression**: Matched filtering using Xilinx FIR Compiler IP cores
-- **Magnitude Extraction**: CORDIC algorithm for computing signal magnitude
-- **DAC Waveform Output**: Real-time analog signal output via ADDA106 DAC module
-- **UART Data Transmission**: Real-time data streaming to PC for analysis
-- **Multi-stage Debug**: ILA (Integrated Logic Analyzer) support for waveform observation at various processing stages
+- **基于ROM的IF信号生成器**: 预存储雷达中频信号
+- **硬件噪声生成器**: 基于中心极限定理（CLT）的高斯白噪声生成
+- **手动DDC实现**: 自主设计的数字下变频器，包含NCO（数控振荡器）
+- **脉冲压缩**: 使用Xilinx FIR Compiler IP核实现匹配滤波
+- **幅度提取**: 使用CORDIC算法计算信号幅度
+- **DAC波形输出**: 通过ADDA106 DAC模块实时输出模拟信号
+- **UART数据传输**: 实时数据流传输到PC进行分析
+- **多阶段调试**: 支持ILA（集成逻辑分析仪）观察各处理阶段波形
 
-## System Architecture
+## 系统架构
 
 ```
-IF Signal ROM → Noise Generator → Adder → DDC → Pulse Compressor → CORDIC → DAC/UART
-                                                            ↓
-                                                        Magnitude Output
+IF信号ROM → 噪声生成器 → 加法器 → DDC → 脉冲压缩器 → CORDIC → DAC/UART
+                                                                   ↓
+                                                               幅度输出
 ```
 
-## Hardware Platform
+## 硬件平台
 
-- **FPGA Board**: ZYNQ 7020 (XC7Z020)
-- **DAC Module**: ADDA106 (8-bit parallel interface)
-- **Development Tools**: Xilinx Vivado 2024.2
-- **Clock**: 50MHz external oscillator (internally converted to 100MHz)
+- **FPGA开发板**: ZYNQ 7020 (XC7Z020)
+- **DAC模块**: ADDA106 (8位并行接口)
+- **开发工具**: Xilinx Vivado 2024.2
+- **时钟**: 50MHz外部振荡器（内部转换为100MHz）
 
-## Pin Assignment
+## 引脚分配
 
-| Function Module | Signal | Verilog Port | FPGA Pin | IO Standard |
-|-----------------|--------|--------------|----------|-------------|
-| System Clock | Clock Input | `clk_pin_in` | **U18** | LVCMOS33 |
+| 功能模块 | 信号 | Verilog端口 | FPGA引脚 | IO标准 |
+|----------|------|-------------|-----------|---------|
+| 系统时钟 | 时钟输入 | `clk_pin_in` | **U18** | LVCMOS33 |
 | UART | UART TX | `uart_tx_pin_out` | **J16** | LVCMOS33 |
-| DAC | DAC Clock | `dac_clk_pin` | **E18** | LVCMOS33 |
-| DAC | DAC Enable | `dac_pd_pin` | **D19** | LVCMOS33 |
-| DAC | Data[7:0] | `dac_data_pins[7:0]` | **L15:D18** | LVCMOS33 |
-| Control | Waveform Select | `btn_next_pin` | **F20** | LVCMOS33 |
+| DAC | DAC时钟 | `dac_clk_pin` | **E18** | LVCMOS33 |
+| DAC | DAC使能 | `dac_pd_pin` | **D19** | LVCMOS33 |
+| DAC | 数据[7:0] | `dac_data_pins[7:0]` | **L15:D18** | LVCMOS33 |
+| 控制 | 波形选择 | `btn_next_pin` | **F20** | LVCMOS33 |
 
-**Total I/O Pins: 12**
+**总I/O引脚数: 12**
 
-## Project Structure
+## 项目结构
 
 ```
 .
 ├── user/
 │   ├── src/
-│   │   └── new/                 # Main Verilog source files
-│   │       ├── system_top.v    # Top-level module (clock/reset management)
-│   │       ├── radar_top.v     # Core radar processing module
-│   │       ├── pulse_compressor.v  # Matched filter implementation
-│   │       ├── handwritten_ddc.v  # Digital down converter
-│   │       ├── nco.v           # Numerically controlled oscillator
-│   │       ├── clt_noise_generator.v  # Gaussian noise generator
-│   │       ├── dac_waveform_selector.v  # DAC waveform output control
-│   │       └── uart_tx.v       # UART transmitter
-│   ├── ip/                     # Xilinx IP core configurations
-│   │   ├── cordic_magnitude/   # CORDIC magnitude calculator
-│   │   ├── fir_i_compiler/     # FIR filter (I channel coefficients)
-│   │   ├── fir_q_compiler/     # FIR filter (Q channel coefficients)
-│   │   ├── if_data_rom/        # ROM for IF signal storage
-│   │   └── sine_cos_rom/       # NCO sine/cosine ROM
-│   ├── sim/                    # Simulation testbenches
-│   └── data/                   # Data files
-├── *.coe                       # ROM coefficient files
-├── README.md                   # This file
-└── .gitignore                  # Git ignore rules
+│   │   └── new/                 # 主Verilog源文件
+│   │       ├── system_top.v    # 顶层模块（时钟/复位管理）
+│   │       ├── radar_top.v     # 核心雷达处理模块
+│   │       ├── pulse_compressor.v  # 匹配滤波器实现
+│   │       ├── handwritten_ddc.v  # 数字下变频器
+│   │       ├── nco.v           # 数控振荡器
+│   │       ├── clt_noise_generator.v  # 高斯噪声生成器
+│   │       ├── dac_waveform_selector.v  # DAC波形输出控制
+│   │       └── uart_tx.v       # UART发送器
+│   ├── ip/                     # Xilinx IP核配置
+│   │   ├── cordic_magnitude/   # CORDIC幅度计算器
+│   │   ├── fir_i_compiler/     # FIR滤波器（I通道系数）
+│   │   ├── fir_q_compiler/     # FIR滤波器（Q通道系数）
+│   │   ├── if_data_rom/        # IF信号存储ROM
+│   │   └── sine_cos_rom/       # NCO正弦/余弦ROM
+│   ├── sim/                    # 仿真测试台
+│   └── data/                   # 数据文件
+├── *.coe                       # ROM系数文件
+├── gemini_sim.m                # MATLAB仿真代码
+├── requirements.txt             # Python依赖列表
+├── README.md                   # 本文件
+└── .gitignore                  # Git忽略规则
 ```
 
-## Source Modules
+## 源代码模块
 
-### Core Modules
+### 核心模块
 
-- **`system_top.v`**: Top-level module with Clocking Wizard for stable 100MHz clock generation and automatic reset logic
-- **`radar_top.v`**: Main radar signal processing pipeline integrating all submodules
-- **`pulse_compressor.v`**: Implements matched filtering using 4 parallel FIR filters (I×hI, Q×hQ, I×hQ, Q×hI)
-- **`handwritten_ddc.v`**: Custom digital down converter with quadrature mixing
-- **`nco.v`**: Numerically controlled oscillator for generating local oscillator signals
+- **`system_top.v`**: 顶层模块，使用Clocking Wizard生成稳定的100MHz时钟和自动复位逻辑
+- **`radar_top.v`**: 主雷达信号处理流水线，集成所有子模块
+- **`pulse_compressor.v`**: 使用4个并行FIR滤波器实现匹配滤波（I×hI, Q×hQ, I×hQ, Q×hI）
+- **`handwritten_ddc.v`**: 自主设计的数字下变频器，支持正交混频
+- **`nco.v`**: 数控振荡器，用于生成本地振荡器信号
 
-### Support Modules
+### 支持模块
 
-- **`clt_noise_generator.v`**: Central Limit Theorem based Gaussian white noise generator using LFSR
-- **`dac_waveform_selector.v`**: Selects between 7 different waveform stages for DAC output
-- **`uart_tx.v`**: UART transmitter (115200 baud) for real-time data streaming
+- **`clt_noise_generator.v`**: 基于中心极限定理的高斯白噪声生成器，使用LFSR
+- **`dac_waveform_selector.v`**: 选择7种不同波形阶段的DAC输出
+- **`uart_tx.v`**: UART发送器（115200波特率），用于实时数据流传输
 
-## Data Files
+## 数据文件
 
-- **`echo_rom_data.coe`**: Pre-generated radar echo signal (IF data)
-- **`sine_rom.coe`**: Sine wave lookup table for NCO
-- **`fir_coeffs_i.coe`**: FIR filter coefficients for I channel
-- **`fir_coeffs_q.coe`**: FIR filter coefficients for Q channel
-- **`fir_coeffs_interp.coe`**: FIR interpolator coefficients for DAC output
+- **`echo_rom_data.coe`**: 预生成的雷达回波信号（IF数据）
+- **`sine_rom.coe`**: NCO正弦波查找表
+- **`fir_coeffs_i.coe`**: I通道FIR滤波器系数
+- **`fir_coeffs_q.coe`**: Q通道FIR滤波器系数
+- **`fir_coeffs_interp.coe`**: DAC输出的FIR插值器系数
 
-## Waveform Selection
+## 波形选择
 
-The system supports 7 different waveform outputs (selectable via button):
+系统支持7种不同的波形输出（可通过按钮选择）：
 
-1. **Mode 0**: Original ROM signal (clean IF signal)
-2. **Mode 1**: Noisy IF signal (signal + Gaussian noise)
-3. **Mode 2**: DDC I channel output
-4. **Mode 3**: DDC Q channel output
-5. **Mode 4**: Pulse compressor I channel output
-6. **Mode 5**: Pulse compressor Q channel output
-7. **Mode 6**: Final magnitude output (compressed pulse)
+1. **模式0**: 原始ROM信号（干净IF信号）
+2. **模式1**: 含噪IF信号（信号+高斯噪声）
+3. **模式2**: DDC I通道输出
+4. **模式3**: DDC Q通道输出
+5. **模式4**: 脉冲压缩器I通道输出
+6. **模式5**: 脉冲压缩器Q通道输出
+7. **模式6**: 最终幅度输出（压缩脉冲）
 
-## Usage
+## 使用方法
 
-### Prerequisites
+### 前置条件
 
-- Xilinx Vivado 2024.2 or later
-- ZYNQ 7020 development board
-- ADDA106 DAC module (optional for analog output)
+- Xilinx Vivado 2024.2或更高版本
+- ZYNQ 7020开发板
+- ADDA106 DAC模块（用于模拟输出，可选）
 
-### Build Instructions
+### 构建步骤
 
-1. Create a new Vivado project
-2. Add all source files from `user/src/new/`
-3. Configure and generate IP cores from `user/ip/`
-4. Import `.coe` coefficient files
-5. Apply pin constraints according to the pin assignment table
-6. Synthesize, implement, and generate bitstream
-7. Download to FPGA
+1. 创建新的Vivado项目
+2. 从`user/src/new/`添加所有源文件
+3. 从`user/ip/`配置并生成IP核
+4. 导入`.coe`系数文件
+5. 根据引脚分配表应用引脚约束
+6. 综合、实现并生成比特流
+7. 下载到FPGA
 
-### Data Acquisition
+### 数据采集
 
-- **UART Mode**: Connect UART to PC (115200 baud, 8N1) to receive real-time magnitude data
-  - Run `pip install -r requirements.txt` to install Python dependencies
-  - Execute `python user/radar_scope.py` to launch the radar monitoring GUI
-- **DAC Mode**: Use DAC waveform selector to output different processing stages as analog signals
-- **ILA Mode**: Use Vivado Integrated Logic Analyzer to observe internal signals
+- **UART模式**: 连接UART到PC（115200波特率，8N1）接收实时幅度数据
+  - 运行`pip install -r requirements.txt`安装Python依赖
+  - 执行`python user/radar_scope.py`启动雷达监控GUI
+- **DAC模式**: 使用DAC波形选择器将不同处理阶段输出为模拟信号
+- **ILA模式**: 使用Vivado集成逻辑分析仪观察内部信号
 
-## Technical Specifications
+### MATLAB仿真
 
-| Parameter | Value |
-|-----------|-------|
-| System Clock | 100 MHz |
-| Input Sample Rate | 50 MHz |
-| DAC Sample Rate | 100 MHz |
-| UART Baud Rate | 115200 |
-| IF Signal Bit Width | 12 bits |
-| DDC Output Bit Width | 44 bits |
-| FIR Output Bit Width | 49 bits |
-| CORDIC Output Bit Width | 32 bits |
-| DAC Output Bit Width | 8 bits |
-| Noise Type | Gaussian white noise |
+运行`gemini_sim.m`可查看完整的雷达信号处理仿真：
+- LFM信号生成
+- 匹配滤波器设计（矩形窗vs汉明窗对比）
+- 脉冲压缩仿真
+- 10倍插值FIR滤波器设计
+- 详细的波形可视化分析
 
-## Key Algorithms
+## 技术规格
 
-### Digital Down Conversion (DDC)
-- Quadrature mixing using NCO-generated sine/cosine
-- Low-pass filtering via FIR Compiler IP
+| 参数 | 数值 |
+|------|------|
+| 系统时钟 | 100 MHz |
+| 输入采样率 | 50 MHz |
+| DAC采样率 | 100 MHz |
+| UART波特率 | 115200 |
+| IF信号位宽 | 12 bits |
+| DDC输出位宽 | 44 bits |
+| FIR输出位宽 | 49 bits |
+| CORDIC输出位宽 | 32 bits |
+| DAC输出位宽 | 8 bits |
+| 噪声类型 | 高斯白噪声 |
 
-### Pulse Compression
-- Matched filtering with complex conjugate of transmitted signal
-- Parallel implementation: 4 FIR filters for I/Q multiplication
-- High-precision arithmetic (48-bit internal)
+## 核心算法
 
-### Magnitude Extraction
-- CORDIC algorithm for sqrt(I² + Q²)
-- AXI-Stream interface for efficient data flow
+### 数字下变频（DDC）
+- 使用NCO生成的正弦/余弦进行正交混频
+- 通过FIR Compiler IP进行低通滤波
 
-## License
+### 脉冲压缩
+- 使用发射信号的复共轭进行匹配滤波
+- 并行实现：4个FIR滤波器用于I/Q乘法
+- 高精度运算（48位内部精度）
 
-This is an educational project for a university course. Feel free to use for learning and reference.
+### 幅度提取
+- CORDIC算法计算 sqrt(I² + Q²)
+- AXI-Stream接口实现高效数据流
 
-## Acknowledgments
+## 依赖
 
-This project was developed as a self-selected topic for a Digital Electronics Laboratory course at the university.
-# fpga-radar-pulse-compression
+### Python依赖
+- `pyserial` - 串口通信
+- `numpy` - 数据处理
+- `PyQt5` - GUI框架
+- `pyqtgraph` - 实时绘图
+
+安装: `pip install -r requirements.txt`
+
+## 许可证
+
+本项目为大学课程的教育项目，欢迎用于学习和参考。
+
+## 致谢
+
+本项目作为大学数字电路实验课程的自主选题开发完成。
