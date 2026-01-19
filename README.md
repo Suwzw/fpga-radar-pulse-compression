@@ -27,9 +27,9 @@ IF信号ROM → 噪声生成器 → 加法器 → DDC → 脉冲压缩器 → CO
                                                                 幅度输出
 ```
 
-![系统实物图](https://s1.vika.cn/space/2026/01/19/66277f70a55c4bf2b7c23e3f4f954613)
+![系统框图](https://s1.vika.cn/space/2026/01/19/66277f70a55c4bf2b7c23e3f4f954613)
 
-![示波器波形](https://s1.vika.cn/space/2026/01/19/195fde7feff54dad88e9b771b428e1b5)
+![系统框图](https://s1.vika.cn/space/2026/01/19/195fde7feff54dad88e9b771b428e1b5)
 
 ## 硬件平台
 
